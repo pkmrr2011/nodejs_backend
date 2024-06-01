@@ -1,0 +1,15 @@
+# dependencies
+/node_modules
+
+# production build output
+/dist
+
+# macOS specific files
+.DS_Store
+
+# Editor specific files
+.vscode/
+.idea/
+
+# Environment variables file (if applicable)
+.env
