@@ -1,17 +1,17 @@
-import dotenv from 'dotenv'
+import dotenv from "dotenv";
 // import { logger } from './shared/logger'
-import createServer from './app'
+import createServer from "./app";
 
-dotenv.config()
+dotenv.config();
 
-const port = process.env.PORT || 8000
+const port = process.env.PORT || 8000;
 
-const app = createServer()
+const app = createServer();
 
 try {
   app.listen(port, () => {
-    console.log(`Connected successfully on port ${port}`)
-  })
+    console.log(`Connected successfully on port ${port}`);
+  });
 } catch (error) {
-  console.log(`Error occured: ${error.message}`)
+  console.log(`Error occured: ${error.message}`);
 }
