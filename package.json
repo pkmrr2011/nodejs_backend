@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js,.jsx --fix",
     "precommit": "eslint . --ext .js,.jsx --max-warnings=0",
     "start": "npm run lint && node dist/index.js",
     "dev": "nodemon --exec babel-node ./index.js",
