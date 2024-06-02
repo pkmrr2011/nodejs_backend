@@ -30,7 +30,8 @@
       "error",
       {
         "vars": "all",
-        "args": "all"
+        "args": "all",
+        "argsIgnorePattern": "^_"
       }
     ],
 

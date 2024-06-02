@@ -6,7 +6,7 @@ const controller = {
       logger.info(`${req.query}`)
       return res.status(200).send({ success: true })
     } catch (e) {
-      return res.status(400).send({ error: true, message: e?.message || 'Something went wrong' })
+      return res.status(400).send({ success: false, message: e?.message || 'Something went wrong' })
     }
   },
 }
