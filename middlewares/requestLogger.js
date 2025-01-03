@@ -1,4 +1,4 @@
-import { logger } from '../shared/logger'
+import { logger } from '../shared/logger.js'
 
 const requestLogger = (req, _res, next) => {
   const { method, url } = req

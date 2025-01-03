@@ -1,56 +1,96 @@
-import jwt from 'jsonwebtoken'
 import bcrypt from 'bcrypt'
-import { User } from '../../models/index'
-import { logger } from '../../shared/logger'
+import { User } from '../models/user.js'
+import { logger } from '../shared/logger.js'
 
 const userController = {
   createUser: async (req, res) => {
     try {
-      const { email, password } = req.body
-      const user = await User.create({ email, password })
+      const { first_name, last_name, email, password, gender, age, country } = req.body
+
+      const user = await User.create({
+        first_name,
+        last_name,
+        email,
+        password,
+        gender,
+        age,
+        country,
+      })
+
+      delete user.dataValues.password
+
       logger.info(`User created: ${user.id}`)
+
       return res.status(201).send({ success: true, user })
     } catch (e) {
-      logger.error(e)
+      logger.error(e.message)
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
     }
   },
 
-  getUser: async (req, res) => {
+  getUserById: async (req, res) => {
     try {
-      const user = await User.findByPk(req.params.id)
+      const { id } = req.params
+      const user = await User.findByPk(id)
+
       if (!user) {
         return res.status(404).send({ success: false, message: 'User not found' })
       }
 
       return res.status(200).send({ success: true, user })
     } catch (e) {
-      logger.error(e)
+      logger.error(e.message)
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
     }
   },
 
-  getUsers: async (_req, res) => {
+  getUsers: async (req, res) => {
     try {
-      const users = await User.findAll()
+      const { offset = 0, limit = 10 } = req.query
+
+      const users = await User.findAll({
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      })
+
       return res.status(200).send({ success: true, users })
     } catch (e) {
-      logger.error(e)
+      logger.error(e.message)
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
     }
   },
 
   updateUser: async (req, res) => {
     try {
-      const { email, password, forgot_password_otp } = req.body
+      const { first_name, last_name, email, password, gender, age, country } = req.body
       const user = await User.findByPk(req.params.id)
       if (!user) {
         return res.status(404).send({ success: false, message: 'User not found' })
       }
 
-      await user.update({ email, password, forgot_password_otp })
+      await user.update({ first_name, last_name, email, password, gender, age, country })
       logger.info(`User updated: ${user.id}`)
       return res.status(200).send({ success: true, user })
+    } catch (e) {
+      logger.error(e)
+      return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
+    }
+  },
+
+  updateUserStatus: async (req, res) => {
+    try {
+      const { status } = req.body
+
+      const user = await User.findByPk(req.params.id)
+      if (!user) {
+        return res.status(404).send({ success: false, message: 'User not found' })
+      }
+
+      await user.update({ status })
+
+      logger.info(`User status updated: ${user.id} to ${status}`)
+
+      return res.status(200).send({ success: true, message: `User status updated to ${status}` })
     } catch (e) {
       logger.error(e)
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
@@ -72,13 +112,21 @@ const userController = {
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
     }
   },
+
   loginUser: async (req, res) => {
     try {
       const { email, password } = req.body
 
-      const user = await User.findOne({ where: { email } })
+      const user = await User.findOne({
+        where: { email },
+        attributes: { include: ['password'] },
+      })
       if (!user) {
         return res.status(404).send({ success: false, message: 'User not found' })
+      }
+
+      if (user.status !== 'active') {
+        return res.status(403).send({ success: false, message: 'User account is inactive or expired' })
       }
 
       const validPassword = bcrypt.compareSync(password, user.password)
@@ -86,14 +134,15 @@ const userController = {
         return res.status(401).send({ success: false, message: 'Invalid password' })
       }
 
-      const token = jwt.sign({ id: user.id, email: user.email }, 'SECRET_KEY', {
-        expiresIn: '1h',
-      })
-
       logger.info(`User logged in: ${user.id}`)
-      return res.status(200).send({ success: true, token })
+
+      await user.update({ last_login: new Date() })
+
+      delete user.dataValues.password
+
+      return res.status(200).send({ success: true, message: 'Login successful', user })
     } catch (e) {
-      logger.error(e)
+      logger.error(e.message)
       return res.status(400).send({ success: false, message: e.message || 'Something went wrong' })
     }
   },

@@ -1,11 +1,10 @@
-import Sequelize from 'sequelize'
-import dotenv from 'dotenv'
-import { logger } from '../shared/logger'
+import { Sequelize, ConnectionRefusedError } from 'sequelize'
+import 'dotenv/config'
+import { logger } from '../shared/logger.js'
 
-dotenv.config()
+const environment = process.env.NODE_ENV
 
-const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, String(process.env.DB_PASSWORD), {
-  host: process.env.DB_HOST,
+const sequelize = new Sequelize(process.env.POSTGRES_URL, {
   dialect: 'postgres',
   logging: false,
   define: {
@@ -13,14 +12,22 @@ const sequelize = new Sequelize(process.env.DB_NAME, process.env.DB_USER, String
   },
 })
 
-async function testConnection() {
+async function connectDb() {
   try {
-    await sequelize.authenticate()
-    await sequelize.sync({ alter: true })
-    logger.info('Connection has been established successfully.')
+    logger.info(`DB CONNECTED WITH URL: ${process.env.POSTGRES_URL}`)
+
+    if (environment == 'PROD') {
+      await sequelize.authenticate()
+    } else {
+      await sequelize.sync({ alter: true })
+    }
   } catch (error) {
-    logger.error('Unable to connect to the database:', error.message)
+    if (error instanceof ConnectionRefusedError) {
+      throw new Error(`Unable to connect Database:  ${error}`)
+    } else {
+      throw new Error(`Unexpected error:- ${error}`)
+    }
   }
 }
 
-export { sequelize, testConnection }
+export { sequelize, connectDb }

@@ -1,7 +1,7 @@
 import express from 'express'
-import requestLogger from './middlewares/requestLogger'
-import testRoutes from './routes/test'
-import userRoutes from './routes/user'
+import requestLogger from './middlewares/requestLogger.js'
+import dashboardRoutes from './routes/dashboard.js'
+import userRoutes from './routes/user.js'
 
 const createServer = () => {
   const app = express()
@@ -10,17 +10,10 @@ const createServer = () => {
   app.use(express.urlencoded({ extended: true }))
 
   app.use(requestLogger)
-  app.use('/test', testRoutes)
-  app.use('/users', userRoutes)
+  app.use('/dashboard', dashboardRoutes)
+  app.use('/user', userRoutes)
 
   app.get('/', async (_req, res) => {
-    return res.status(200).send({
-      success: true,
-      message: 'The server is running',
-    })
-  })
-
-  app.get('/health', async (_req, res) => {
     return res.status(200).send({
       success: true,
       message: 'The server is running',
